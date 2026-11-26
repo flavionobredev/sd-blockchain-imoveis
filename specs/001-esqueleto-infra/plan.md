@@ -17,6 +17,7 @@ Estabelecer o monorepo pnpm, Dockerfiles e Compose com seis serviços e três vo
 | Testes (melhoria) | Scripts `pnpm test*` com stubs OK na 001 |
 | pt-BR | README e docs de spec em pt-BR |
 | Sem segredos | `.env.example` somente; `.gitignore` cobre `.env` |
+| Rede Docker | URLs por nome de serviço; HAProxy :8080; `docker/haproxy.cfg` |
 
 **Gate**: aprovado para implementação (decisões de infra registradas em 2026-11-26).
 
