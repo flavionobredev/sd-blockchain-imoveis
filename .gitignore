@@ -1,0 +1,36 @@
+# Dependências
+node_modules/
+
+# Build e caches
+dist/
+.output/
+.nuxt/
+.turbo/
+*.tsbuildinfo
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Ambiente local
+.env
+.env.*
+!.env.example
+
+# SO e IDE
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+!.vscode/extensions.json
+
+# Testes e cobertura
+coverage/
+
+# Dados locais da blockchain (volumes Docker no host)
+data/
+
+# Artefatos Impeccable locais (config versionada; estado não)
+.impeccable/cache/
