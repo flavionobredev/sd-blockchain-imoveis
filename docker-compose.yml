@@ -1,0 +1,141 @@
+services:
+  haproxy:
+    image: haproxy:2.9-alpine
+    container_name: haproxy
+    ports:
+      - '8080:80'
+    volumes:
+      - ./docker/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+    healthcheck:
+      test: ['CMD', 'haproxy', '-c', '-f', '/usr/local/etc/haproxy/haproxy.cfg']
+      interval: 10s
+      timeout: 3s
+      retries: 3
+    depends_on:
+      web-01:
+        condition: service_healthy
+      web-02:
+        condition: service_healthy
+    networks:
+      - sd-net
+
+  web-01:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    container_name: web-01
+    environment:
+      NUXT_SERVER_NAME: WEB-01
+      NUXT_NODE_COORDINATOR_URL: http://node-coordinator:3000
+      HOST: 0.0.0.0
+      PORT: '3000'
+    depends_on:
+      node-coordinator:
+        condition: service_healthy
+    healthcheck:
+      test: ['CMD', 'wget', '-q', '-O', '/dev/null', 'http://127.0.0.1:3000/api/health']
+      interval: 5s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+    networks:
+      - sd-net
+
+  web-02:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    container_name: web-02
+    environment:
+      NUXT_SERVER_NAME: WEB-02
+      NUXT_NODE_COORDINATOR_URL: http://node-coordinator:3000
+      HOST: 0.0.0.0
+      PORT: '3000'
+    depends_on:
+      node-coordinator:
+        condition: service_healthy
+    healthcheck:
+      test: ['CMD', 'wget', '-q', '-O', '/dev/null', 'http://127.0.0.1:3000/api/health']
+      interval: 5s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+    networks:
+      - sd-net
+
+  node-coordinator:
+    build:
+      context: .
+      dockerfile: apps/node/Dockerfile
+    container_name: node-coordinator
+    environment:
+      ROLE: coordinator
+      NODE_ID: coordinator
+      PORT: '3000'
+    healthcheck:
+      test: ['CMD', 'wget', '-q', '-O', '/dev/null', 'http://127.0.0.1:3000/']
+      interval: 5s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+    volumes:
+      - chain-coordinator:/data
+    networks:
+      - sd-net
+
+  node-replica-1:
+    build:
+      context: .
+      dockerfile: apps/node/Dockerfile
+    container_name: node-replica-1
+    environment:
+      ROLE: replica
+      NODE_ID: replica-1
+      NODE_COORDINATOR_URL: http://node-coordinator:3000
+      PORT: '3000'
+    depends_on:
+      node-coordinator:
+        condition: service_healthy
+    healthcheck:
+      test: ['CMD', 'wget', '-q', '-O', '/dev/null', 'http://127.0.0.1:3000/']
+      interval: 5s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+    volumes:
+      - chain-replica-1:/data
+    networks:
+      - sd-net
+
+  node-replica-2:
+    build:
+      context: .
+      dockerfile: apps/node/Dockerfile
+    container_name: node-replica-2
+    environment:
+      ROLE: replica
+      NODE_ID: replica-2
+      NODE_COORDINATOR_URL: http://node-coordinator:3000
+      PORT: '3000'
+    depends_on:
+      node-coordinator:
+        condition: service_healthy
+    healthcheck:
+      test: ['CMD', 'wget', '-q', '-O', '/dev/null', 'http://127.0.0.1:3000/']
+      interval: 5s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+    volumes:
+      - chain-replica-2:/data
+    networks:
+      - sd-net
+
+volumes:
+  chain-coordinator:
+  chain-replica-1:
+  chain-replica-2:
+
+networks:
+  sd-net:
+    driver: bridge

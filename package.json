@@ -1,0 +1,26 @@
+{
+  "name": "sd-blockchain-imoveis",
+  "version": "0.0.1",
+  "private": true,
+  "packageManager": "pnpm@10.33.4",
+  "engines": {
+    "node": ">=24"
+  },
+  "pnpm": {
+    "overrides": {
+      "markdown-it": "14.1.0"
+    },
+    "onlyBuiltDependencies": [
+      "@swc/core",
+      "esbuild",
+      "vue-demi"
+    ]
+  },
+  "scripts": {
+    "build": "pnpm -r build",
+    "dev": "pnpm -r --parallel run dev",
+    "test": "pnpm run test:node && pnpm run test:web",
+    "test:node": "pnpm --filter @sd/node test",
+    "test:web": "pnpm --filter @sd/web test"
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "name": "@sd/slides",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "build": "slidev build",
+    "dev": "slidev slides.md --open false",
+    "export": "slidev export"
+  },
+  "devDependencies": {
+    "@slidev/cli": "^52.1.0",
+    "@slidev/theme-default": "latest"
+  }
+}
