@@ -1,6 +1,6 @@
 # Constituição do Projeto — sd-blockchain-imoveis
 
-**Versão**: 1.0.0 | **Ratificada**: 2026-11-26 | **Última emenda**: 2026-11-26
+**Versão**: 1.1.0 | **Ratificada**: 2026-11-26 | **Última emenda**: 2026-11-26
 
 Documento normativo para todas as specs (`specs/`) e implementações deste repositório. Em caso de conflito, a constituição prevalece sobre conveniência técnica ou preferência estética.
 
@@ -49,7 +49,14 @@ Testes automatizados são **desejáveis**, não bloqueantes para a entrega míni
 - Identificadores de código (nomes de variáveis, rotas HTTP, env vars) podem permanecer em inglês quando for convenção do ecossistema.
 - Slides e demo (spec 006) também em pt-BR.
 
-## VII. Segurança de repositório — nenhum segredo
+## VIII. Rede Docker e descoberta de serviços
+
+- Toda comunicação **entre contêineres** ocorre na rede definida pelo Docker Compose, usando **nomes de serviço** e portas internas (ex.: `http://node-coordinator:3000`, `http://web-01:3000`).
+- URLs podem ser expostas via variáveis de ambiente (`NODE_COORDINATOR_URL`, etc.), mas os valores MUST apontar para nomes de serviço do Compose — **nunca** `localhost`, `127.0.0.1` nem IP de host ao rodar dentro do cluster.
+- O único ponto de entrada HTTP para o usuário no host é o **HAProxy na porta 8080** (mapeamento publicado no Compose).
+- Configuração do HAProxy versionada em `docker/haproxy.cfg`.
+
+## IX. Segurança de repositório — nenhum segredo
 
 - **Proibido** commitar credenciais, tokens, chaves privadas ou `.env` com valores reais.
 - Usar `.env.example` com placeholders quando variáveis forem necessárias.
@@ -59,12 +66,14 @@ Testes automatizados são **desejáveis**, não bloqueantes para a entrega míni
 
 | Área | Decisão |
 |------|---------|
-| Monorepo | pnpm workspaces |
+| Monorepo | pnpm workspaces; versão fixada em `packageManager` + **corepack** |
+| Runtime / Docker | **Node 24** (`node:24-alpine` em todos os Dockerfiles; tag disponível no Docker Hub) |
 | API / nós | `apps/node` — NestJS |
 | Web | `apps/web` — Nuxt 4, SSR, `@nuxt/ui` v4, Tailwind v4 |
-| Slides | `apps/slides` — Slidev (Node ≥ 22.12) |
+| Slides | `apps/slides` — Slidev (Node 24) |
 | Blockchain | `packages/chain-core` |
-| Proxy | HAProxy, `GET /api/health`, `option httpchk` |
+| Proxy | HAProxy na porta **8080**, `GET /api/health` → `{ "status": "ok" }` na 001; status dos nós na spec 004 |
+| Spec Kit / Cursor | `.specify/` e skills **`.cursor/skills/`** versionadas no repositório |
 | Design | Impeccable (spec 001 instala; uso visual na spec 005) |
 
 ## Governança

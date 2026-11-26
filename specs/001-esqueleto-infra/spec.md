@@ -55,7 +55,7 @@ Como revisor (Flávio), quero Spec Kit inicializado e Impeccable instalado com t
 
 ### Edge Cases
 
-- Falha de build de imagem Docker por versão de Node incompatível com Slidev (≥ 22.12).
+- Falha de build de imagem Docker por incompatibilidade com **Node 24** / `node:24-alpine`.
 - Porta do balanceador já em uso no host.
 - Volume Docker sem permissão de escrita em `chain.json`.
 
@@ -72,21 +72,20 @@ Como revisor (Flávio), quero Spec Kit inicializado e Impeccable instalado com t
 - **FR-007-S**: README MUST documentar pré-requisitos (Docker, Node, pnpm), `pnpm install`, `docker compose up`, URLs/ports e `pnpm --filter slides dev`.
 - **FR-008-S**: Raiz MUST expor scripts `pnpm test`, `pnpm test:node`, `pnpm test:web` (podem delegar a stubs na 001).
 - **FR-009-S**: MUST executar `npx impeccable install --providers=cursor --scope=project` e versionar `.impeccable/config.json` com telemetria desligada.
+- **FR-010-S**: HAProxy MUST publicar a porta **8080** no host (único ponto de entrada HTTP para o usuário).
+- **FR-011-S**: Comunicação interna entre contêineres MUST usar a rede Docker Compose com **nomes de serviço** (ex.: `http://node-coordinator:3000`, `http://web-01:3000`). Variáveis como `NODE_COORDINATOR_URL` são permitidas, com valores sempre apontando para nomes de serviço — nunca `localhost` ou IP de host.
+- **FR-012-S**: Raiz MUST fixar **pnpm** via campo `packageManager` no `package.json` e habilitar **corepack** (documentado no README).
+- **FR-013-S**: Todos os Dockerfiles MUST usar imagem base **`node:24-alpine`** (tag disponível no Docker Hub).
+- **FR-014-S**: `GET /api/health` na 001 MUST retornar apenas `{ "status": "ok" }`. Status dos nós (RF08) fica para a **spec 004**.
+- **FR-015-S**: Configuração HAProxy MUST residir em **`docker/haproxy.cfg`** versionado e montado no serviço `haproxy`.
+- **FR-016-S**: Skills Spec Kit em **`.cursor/skills/`** MUST permanecer versionadas no repositório.
 
 ### Fora de escopo (specs posteriores)
 
 - RF01–RF08 de negócio (specs 002–004).
 - Mutex, replicação com ack 2 s, telas Imóveis/Blockchain/Cluster (003–004).
 - Testes e2e completos e cenários T01–T10 (melhoria contínua; base de scripts na 001).
-
-### Ambiguidades
-
-- **FR-010-S**: Porta exposta do HAProxy no host MUST ser [NEEDS CLARIFICATION: 8080, 80 ou outra porta padrão da turma?].
-- **FR-011-S**: Rede interna entre nós e web MUST usar hostnames [NEEDS CLARIFICATION: nomes exatos dos serviços Compose vs. variáveis `NODE_COORDINATOR_URL` documentadas no README].
-- **FR-012-S**: Versão mínima de **pnpm** e política de `packageManager` no root [NEEDS CLARIFICATION: pinar 9.x via corepack?].
-- **FR-013-S**: Imagem base Node para Dockerfiles [NEEDS CLARIFICATION: `node:22-alpine` única para todos ou imagens distintas para Nest vs. Nuxt?].
-- **FR-014-S**: Conteúdo mínimo de `GET /api/health` na 001 [NEEDS CLARIFICATION: JSON `{ "status":"ok" }` vs. já incluir status dos nós (RF08)].
-- **FR-015-S**: HAProxy config em arquivo versionado `haproxy/haproxy.cfg` vs. montagem por env [NEEDS CLARIFICATION].
+- Corpo enriquecido de `/api/health` com status dos nós (spec 004 / RF08).
 
 ### Entidades (preparação; sem modelo de domínio ainda)
 
@@ -98,7 +97,7 @@ Como revisor (Flávio), quero Spec Kit inicializado e Impeccable instalado com t
 
 - **SC-001**: Em máquina limpa com Docker, cluster sobe em menos de 10 minutos seguindo só o README (build inicial incluído).
 - **SC-002**: `pnpm install` e `pnpm -r build` completam sem erro.
-- **SC-003**: `pnpm --filter slides dev` inicia sem erro de engine Node.
+- **SC-003**: `pnpm --filter slides dev` inicia sem erro com **Node 24**.
 - **SC-004**: Health check do HAProxy marca backend como down quando `web-01` está parado (demonstrável manualmente).
 - **SC-005**: Nenhum arquivo com segredo no repositório; `.env` no `.gitignore`.
 
@@ -106,5 +105,6 @@ Como revisor (Flávio), quero Spec Kit inicializado e Impeccable instalado com t
 
 - Hospedagem apenas local; sem secrets de registry privado.
 - Git branch padrão de entrega: `main`; trabalho em branches `cursor/<nome>-e3f2`.
-- Spec Kit instalado com integração **cursor-agent** (CLI `specify-cli`); skills em `.cursor/skills/`.
+- Spec Kit instalado com integração **cursor-agent** (CLI `specify-cli`); skills em `.cursor/skills/` (versionadas).
+- Acesso à aplicação via `http://localhost:8080` (HAProxy).
 - Documentação 100% pt-BR.

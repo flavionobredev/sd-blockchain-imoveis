@@ -19,7 +19,7 @@ A integração `cursor` direta não consta no catálogo da CLI 1.4.5; a integra�
 | `.specify/memory/constitution.md` | Constituição do projeto |
 | `.specify/templates/` | Modelos de spec, plan, tasks |
 | `.specify/scripts/bash/` | Automação (ex.: `create-new-feature.sh`) |
-| `.cursor/skills/speckit-*` | Skills para o Cursor |
+| `.cursor/skills/speckit-*` | Skills para o Cursor (**versionadas no repo**) |
 
 ## Fluxo sugerido
 
