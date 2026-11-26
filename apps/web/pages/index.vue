@@ -1,6 +1,7 @@
 <script setup lang="ts">
-const config = useRuntimeConfig();
-const serverName = config.public.serverName;
+// Buscado no servidor durante o SSR: mostra a instância que renderizou a página.
+const { data } = await useFetch('/api/instance');
+const serverName = computed(() => data.value?.serverName ?? '—');
 </script>
 
 <template>

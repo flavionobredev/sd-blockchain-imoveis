@@ -26,7 +26,7 @@ services:
     container_name: web-01
     environment:
       NUXT_SERVER_NAME: WEB-01
-      NODE_COORDINATOR_URL: http://node-coordinator:3000
+      NUXT_NODE_COORDINATOR_URL: http://node-coordinator:3000
       HOST: 0.0.0.0
       PORT: '3000'
     depends_on:
@@ -48,7 +48,7 @@ services:
     container_name: web-02
     environment:
       NUXT_SERVER_NAME: WEB-02
-      NODE_COORDINATOR_URL: http://node-coordinator:3000
+      NUXT_NODE_COORDINATOR_URL: http://node-coordinator:3000
       HOST: 0.0.0.0
       PORT: '3000'
     depends_on:

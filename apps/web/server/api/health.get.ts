@@ -1,5 +1,2 @@
-export default defineEventHandler((event) => {
-  const serverName = process.env.NUXT_SERVER_NAME ?? 'unknown';
-  setHeader(event, 'X-Served-By', serverName);
-  return { status: 'ok' };
-});
+// O header X-Served-By é aplicado pelo middleware server-name.
+export default defineEventHandler(() => ({ status: 'ok' }));

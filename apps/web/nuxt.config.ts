@@ -4,11 +4,12 @@ export default defineNuxtConfig({
   devtools: { enabled: false },
   modules: ['@nuxt/ui'],
   css: ['~/assets/css/main.css'],
+  // Valores padrão; sobrescritos em runtime pelas envs NUXT_* (não pelo build):
+  //   serverName         <- NUXT_SERVER_NAME
+  //   nodeCoordinatorUrl <- NUXT_NODE_COORDINATOR_URL
   runtimeConfig: {
-    nodeCoordinatorUrl: process.env.NODE_COORDINATOR_URL ?? 'http://node-coordinator:3000',
-    public: {
-      serverName: process.env.NUXT_SERVER_NAME ?? 'WEB-LOCAL',
-    },
+    serverName: 'WEB-LOCAL',
+    nodeCoordinatorUrl: 'http://node-coordinator:3000',
   },
   nitro: {
     preset: 'node-server',
