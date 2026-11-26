@@ -1,0 +1,11 @@
+node_modules
+.git
+.github
+**/.nuxt
+**/.output
+**/dist
+coverage
+data
+.impeccable/cache
+*.md
+!apps/slides/slides.md

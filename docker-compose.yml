@@ -1,0 +1,94 @@
+services:
+  haproxy:
+    image: haproxy:2.9-alpine
+    container_name: haproxy
+    ports:
+      - '8080:80'
+    volumes:
+      - ./docker/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+    depends_on:
+      web-01:
+        condition: service_started
+      web-02:
+        condition: service_started
+    networks:
+      - sd-net
+
+  web-01:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    container_name: web-01
+    environment:
+      NUXT_SERVER_NAME: WEB-01
+      NODE_COORDINATOR_URL: http://node-coordinator:3000
+      HOST: 0.0.0.0
+      PORT: '3000'
+    networks:
+      - sd-net
+
+  web-02:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    container_name: web-02
+    environment:
+      NUXT_SERVER_NAME: WEB-02
+      NODE_COORDINATOR_URL: http://node-coordinator:3000
+      HOST: 0.0.0.0
+      PORT: '3000'
+    networks:
+      - sd-net
+
+  node-coordinator:
+    build:
+      context: .
+      dockerfile: apps/node/Dockerfile
+    container_name: node-coordinator
+    environment:
+      ROLE: coordinator
+      NODE_ID: coordinator
+      PORT: '3000'
+    volumes:
+      - chain-coordinator:/data
+    networks:
+      - sd-net
+
+  node-replica-1:
+    build:
+      context: .
+      dockerfile: apps/node/Dockerfile
+    container_name: node-replica-1
+    environment:
+      ROLE: replica
+      NODE_ID: replica-1
+      NODE_COORDINATOR_URL: http://node-coordinator:3000
+      PORT: '3000'
+    volumes:
+      - chain-replica-1:/data
+    networks:
+      - sd-net
+
+  node-replica-2:
+    build:
+      context: .
+      dockerfile: apps/node/Dockerfile
+    container_name: node-replica-2
+    environment:
+      ROLE: replica
+      NODE_ID: replica-2
+      NODE_COORDINATOR_URL: http://node-coordinator:3000
+      PORT: '3000'
+    volumes:
+      - chain-replica-2:/data
+    networks:
+      - sd-net
+
+volumes:
+  chain-coordinator:
+  chain-replica-1:
+  chain-replica-2:
+
+networks:
+  sd-net:
+    driver: bridge
