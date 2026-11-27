@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// Buscado no servidor durante o SSR: mostra a instância que renderizou a página.
+// Fetched on the server during SSR: shows the instance that rendered the page.
 const { data } = await useFetch('/api/instance');
 const serverName = computed(() => data.value?.serverName ?? '—');
 </script>

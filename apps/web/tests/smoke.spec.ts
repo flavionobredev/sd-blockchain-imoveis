@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 describe('@sd/web smoke', () => {
-  it('passa', () => {
+  it('passes', () => {
     expect(true).toBe(true);
   });
 });
