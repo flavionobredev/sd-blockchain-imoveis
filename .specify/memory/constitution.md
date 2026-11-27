@@ -1,6 +1,6 @@
 # Constituição do Projeto — sd-blockchain-imoveis
 
-**Versão**: 1.1.0 | **Ratificada**: 2026-11-26 | **Última emenda**: 2026-11-26
+**Versão**: 1.2.0 | **Ratificada**: 2026-11-26 | **Última emenda**: 2026-11-26
 
 Documento normativo para todas as specs (`specs/`) e implementações deste repositório. Em caso de conflito, a constituição prevalece sobre conveniência técnica ou preferência estética.
 
@@ -45,9 +45,15 @@ Testes automatizados são **desejáveis**, não bloqueantes para a entrega míni
 
 ## VI. Documentação e idioma (pt-BR)
 
-- Toda documentação de specs, planos, tarefas, README e comentários voltados ao professor/colegas em **português brasileiro (pt-BR)**.
-- Identificadores de código (nomes de variáveis, rotas HTTP, env vars) podem permanecer em inglês quando for convenção do ecossistema.
+- Toda documentação de specs, planos, tarefas e README em **português brasileiro (pt-BR)**.
 - Slides e demo (spec 006) também em pt-BR.
+- O código segue o § VII (inglês); só mensagens de erro legíveis e textos exibidos no frontend ficam em pt-BR.
+
+## VII. Código em inglês
+
+- Todo o código MUST estar em **inglês**: nomes de variáveis, funções, classes, tipos, campos de objetos e de JSON (incluindo o `data` dos blocos), valores de enums/uniões (ex.: `REGISTRATION`, `TRANSFER`), códigos de erro (ex.: `DUPLICATE_PROPERTY`), rotas HTTP, env vars, comentários e descrições de testes.
+- Ficam em **pt-BR** apenas: o texto legível das mensagens de erro (campo `message`) e tudo o que for exibido no frontend (textos de tela, rótulos, avisos).
+- Quando o enunciado usar termos em português (ex.: `imovelId`, `operacao`), a spec registra a correspondência com o identificador em inglês.
 
 ## VIII. Rede Docker e descoberta de serviços
 
@@ -93,3 +99,10 @@ Testes automatizados são **desejáveis**, não bloqueantes para a entrega míni
 | 004 | Web Nuxt |
 | 005 | Design (Impeccable) |
 | 006 | Slides e roteiro de demo T01–T10 |
+
+## Histórico de emendas
+
+| Versão | Data | Mudança |
+|--------|------|---------|
+| 1.1.0 | 2026-11-26 | Ratificação com a spec 000 (PR #1) |
+| 1.2.0 | 2026-11-26 | Novo § VII — código em inglês; pt-BR só em `message` de erro, UI e documentação (§ VI ajustado). Pedido do Flávio na revisão do PR #3 |

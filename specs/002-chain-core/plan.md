@@ -15,11 +15,12 @@ Substituir o placeholder de `packages/chain-core` pela blockchain simplificada d
 | III. TypeScript | Pacote em TS; build `tsup` CJS + ESM + `.d.ts` mantido |
 | IV. Regra de réplica | A core não implementa quórum, mas dá `appendBlock`/`detectGap`/`canReplaceChain` para a 003 cumprir "validar antes de substituir" |
 | V. Testes | Decisão explícita: ~10 testes unitários das funções críticas, de suporte aos e2e da 003 |
-| VI. pt-BR | Docs, mensagens de erro e campos de `data` em pt-BR; identificadores em inglês |
+| VI. pt-BR | Prosa das specs, `message` dos erros e textos de UI em pt-BR |
+| VII. Código em inglês | Tipos, funções, campos de `data`, valores de `operation`, códigos de erro e status em inglês; ajustes da 001 na Fase F |
 | VIII. Rede Docker | Não se aplica (biblioteca sem rede) |
 | IX. Sem segredos | Nenhuma variável de ambiente; dados de teste fictícios |
 
-**Gate**: aprovado para implementação após revisão do Flávio e resposta às questões Q1–Q5 da spec (as propostas valem como padrão se ele não se opuser).
+**Gate**: questões Q1–Q5 decididas (ver "Decisões fechadas" na spec); aprovado para implementação após o merge deste PR de docs.
 
 ## Contexto técnico
 
@@ -41,11 +42,11 @@ Substituir o placeholder de `packages/chain-core` pela blockchain simplificada d
 
 ```ts
 // tipos
-export type Operacao = 'GENESE' | 'CADASTRO' | 'TRANSFERENCIA';
-export type GeneseData = { operacao: 'GENESE' };
-export type CadastroData = { operacao: 'CADASTRO'; imovelId: string; endereco: string; proprietario: string };
-export type TransferenciaData = { operacao: 'TRANSFERENCIA'; imovelId: string; proprietarioAnterior: string; novoProprietario: string };
-export type BlockData = GeneseData | CadastroData | TransferenciaData;
+export type Operation = 'GENESIS' | 'REGISTRATION' | 'TRANSFER';
+export type GenesisData = { operation: 'GENESIS' };
+export type RegistrationData = { operation: 'REGISTRATION'; propertyId: string; address: string; owner: string };
+export type TransferData = { operation: 'TRANSFER'; propertyId: string; address: string; previousOwner: string; newOwner: string };
+export type BlockData = GenesisData | RegistrationData | TransferData;
 export interface Block { index: number; timestamp: string; data: BlockData; previousHash: string; hash: string }
 export type Chain = Block[];
 
@@ -60,26 +61,26 @@ export function createBlock(previous: Block, data: BlockData, timestamp?: string
 
 // validação
 export type ChainInvalidReason =
-  'GENESE_INVALIDA' | 'DADOS_INVALIDOS' | 'INDICE_FORA_DE_SEQUENCIA' | 'PREVIOUS_HASH_INVALIDO' | 'HASH_INVALIDO';
+  'INVALID_GENESIS' | 'INVALID_DATA' | 'INDEX_OUT_OF_SEQUENCE' | 'INVALID_PREVIOUS_HASH' | 'INVALID_HASH';
 export type ChainValidationResult =
   | { valid: true; length: number }
   | { valid: false; invalidIndex: number; reason: ChainInvalidReason; message: string };
 export function validateChain(chain: Chain): ChainValidationResult;
 
 // estado e regras
-export interface HistoricoEntry { proprietario: string; desde: string; blockIndex: number; operacao: 'CADASTRO' | 'TRANSFERENCIA' }
-export interface Imovel { imovelId: string; endereco: string; proprietarioAtual: string; registradoEm: string; historico: HistoricoEntry[] }
-export interface ChainState { imoveis: Imovel[] }               // ordem de cadastro
-export type OperationErrorCode = 'IMOVEL_DUPLICADO' | 'IMOVEL_INEXISTENTE' | 'MESMO_PROPRIETARIO' | 'DADOS_INVALIDOS';
+export interface HistoryEntry { owner: string; since: string; blockIndex: number; operation: 'REGISTRATION' | 'TRANSFER' }
+export interface Property { propertyId: string; address: string; currentOwner: string; registeredAt: string; history: HistoryEntry[] }
+export interface ChainState { properties: Property[] }               // ordem de cadastro
+export type OperationErrorCode = 'DUPLICATE_PROPERTY' | 'PROPERTY_NOT_FOUND' | 'SAME_OWNER' | 'INVALID_DATA';
 export interface OperationError { code: OperationErrorCode; message: string; blockIndex?: number }
 export type Result<T, E> = { ok: true; value: T } | { ok: false; error: E };
 export function deriveState(chain: Chain): Result<ChainState, OperationError>;
-export function findImovel(state: ChainState, imovelId: string): Imovel | undefined;
-export function validateOperation(state: ChainState, data: CadastroData | TransferenciaData): Result<void, OperationError>;
-export type NovaOperacao =
-  | { operacao: 'CADASTRO'; imovelId: string; endereco: string; proprietario: string }
-  | { operacao: 'TRANSFERENCIA'; imovelId: string; novoProprietario: string };
-export function proposeBlock(chain: Chain, op: NovaOperacao, timestamp?: string): Result<Block, OperationError>;
+export function findProperty(state: ChainState, propertyId: string): Property | undefined;
+export function validateOperation(state: ChainState, data: RegistrationData | TransferData): Result<void, OperationError>;
+export type NewOperation =
+  | { operation: 'REGISTRATION'; propertyId: string; address: string; owner: string }
+  | { operation: 'TRANSFER'; propertyId: string; newOwner: string };   // address e previousOwner vêm do estado
+export function proposeBlock(chain: Chain, op: NewOperation, timestamp?: string): Result<Block, OperationError>;
 
 // serialização
 export class ChainParseError extends Error {}
@@ -87,7 +88,7 @@ export function serializeChain(chain: Chain): string;          // JSON.stringify
 export function parseChain(text: string): Chain;               // lança ChainParseError
 
 // recuperação
-export type GapStatus = 'PROXIMO' | 'LACUNA' | 'JA_EXISTE' | 'CONFLITO';
+export type GapStatus = 'NEXT' | 'GAP' | 'ALREADY_EXISTS' | 'CONFLICT';
 export function detectGap(chain: Chain, incoming: Block): GapStatus;
 export function appendBlock(chain: Chain, block: Block): Result<Chain, { reason: GapStatus | ChainInvalidReason; message: string }>;
 export function canReplaceChain(remote: Chain): Result<void, ChainValidationResult | OperationError>;
@@ -100,21 +101,23 @@ Os nomes acima são o contrato com a 003; pequenos ajustes de assinatura na impl
 1. **JSON canônico**: `canonicalJson` serializa objetos com chaves ordenadas (recursivo), arrays em ordem, sem espaços; `undefined` é omitido. É o que entra no SHA-256. Evita depender da ordem de chaves que o `JSON.parse` do disco devolve e não exige biblioteca externa.
 2. **Hash**: `createHash('sha256').update(canonicalJson({ index, timestamp, data, previousHash })).digest('hex')`.
 3. **Gênese**: constante calculada uma vez no carregamento do módulo; `validateChain` compara o bloco 0 inteiro com ela (não só o hash).
-4. **Ordem das checagens em `validateChain`**: gênese → formato → `index` → `previousHash` → `hash`. Para T08 (alterar `data` sem recalcular), o motivo esperado é `HASH_INVALIDO` no bloco adulterado. Se o aluno recalcular só aquele hash, o próximo bloco acusa `PREVIOUS_HASH_INVALIDO` — bom para explicar o encadeamento na apresentação.
-5. **Normalização**: `trim` em todos os textos de entrada no `proposeBlock`; `imovelId` também em maiúsculas (proposta Q2). Os blocos guardam o valor já normalizado, então o hash não depende de normalização na leitura.
+4. **Ordem das checagens em `validateChain`**: gênese → formato → `index` → `previousHash` → `hash`. Para T08 (alterar `data` sem recalcular), o motivo esperado é `INVALID_HASH` no bloco adulterado. Se o aluno recalcular só aquele hash, o próximo bloco acusa `INVALID_PREVIOUS_HASH` — bom para explicar o encadeamento na apresentação.
+5. **Normalização**: `trim` em todos os textos de entrada no `proposeBlock`; `propertyId` também em maiúsculas e no máximo 40 caracteres (D2, D5); `owner` só com `trim`. Os blocos guardam o valor já normalizado, então o hash não depende de normalização na leitura.
 6. **Regras no replay**: `deriveState` reaplica `validateOperation` bloco a bloco; o primeiro bloco que violar devolve erro com `blockIndex`. Com isso `canReplaceChain` recusa cadeias "estruturalmente válidas mas absurdas".
-7. **`detectGap`**: compara `incoming.index` com `last.index`: `index === last.index + 1` → `PROXIMO`; `index > last.index + 1` → `LACUNA`; `index <= last.index` e hash igual ao bloco local daquele índice → `JA_EXISTE`; senão → `CONFLITO`. `appendBlock` só anexa no caso `PROXIMO` e se `previousHash`/`hash` conferirem.
+7. **`detectGap`**: compara `incoming.index` com `last.index`: `index === last.index + 1` → `NEXT`; `index > last.index + 1` → `GAP`; `index <= last.index` e hash igual ao bloco local daquele índice → `ALREADY_EXISTS`; senão → `CONFLICT`. `appendBlock` só anexa no caso `NEXT` e se `previousHash`/`hash` conferirem.
 8. **Imutabilidade**: todas as funções devolvem arrays/objetos novos; testes conferem que a entrada não mudou.
 9. **Mensagens**: em pt-BR, prefixadas com o bloco quando houver (ex.: `Bloco 2: previousHash não corresponde ao hash do bloco 1`).
+10. **`address` na transferência, sem value object (D1)**: `proposeBlock` copia o `address` do imóvel registrado para o bloco `TRANSFER`; no replay, `deriveState` recusa com `INVALID_DATA` se o `address` divergir. Não há classe `Address`/`Property`: os blocos são objetos JSON simples (hash canônico, edição manual no T08), e `Property` é só a interface do estado derivado.
+11. **Autoridade do coordenador (D3)**: `canReplaceChain` só valida a remota; não compara tamanhos. A 003 sempre substitui pela cadeia do coordenador em `GAP`/`CONFLICT`.
 
 ### Mapeamento códigos → HTTP (referência para a 003)
 
 | Código | HTTP sugerido |
 |--------|---------------|
-| `IMOVEL_DUPLICADO` | 409 |
-| `IMOVEL_INEXISTENTE` | 404 |
-| `MESMO_PROPRIETARIO` | 422 |
-| `DADOS_INVALIDOS` | 400 |
+| `DUPLICATE_PROPERTY` | 409 |
+| `PROPERTY_NOT_FOUND` | 404 |
+| `SAME_OWNER` | 422 |
+| `INVALID_DATA` | 400 |
 
 ## Estrutura do repositório
 
@@ -138,11 +141,11 @@ packages/chain-core/
 ├── vitest.config.ts      # inalterado
 └── src/
     ├── index.ts          # reexporta a API pública
-    ├── types.ts          # Block, BlockData, Chain, Imovel, Result...
+    ├── types.ts          # Block, BlockData, Chain, Property, Result...
     ├── hash.ts           # canonicalJson, calculateHash
     ├── block.ts          # gênese, createBlock
     ├── validate.ts       # validateChain
-    ├── state.ts          # deriveState, findImovel, validateOperation, proposeBlock
+    ├── state.ts          # deriveState, findProperty, validateOperation, proposeBlock
     ├── serialize.ts      # serializeChain, parseChain, ChainParseError
     ├── sync.ts           # detectGap, appendBlock, canReplaceChain
     └── chain-core.spec.ts  # ~10 testes unitários
@@ -160,10 +163,10 @@ README.md                 # linha da tabela de pacotes deixa de dizer "placehold
 
 ### Fase B — Validação (RF06, T08)
 1. `validate.ts` com os 5 motivos.
-2. Testes: cadeia íntegra; `data` adulterado → `HASH_INVALIDO` no índice certo; `previousHash` quebrado; gênese diferente.
+2. Testes: cadeia íntegra; `data` adulterado → `INVALID_HASH` no índice certo; `previousHash` quebrado; gênese diferente.
 
 ### Fase C — Estado e regras (RF01–RF04, T01, T02)
-1. `state.ts`: `deriveState`, `validateOperation`, `proposeBlock`, `findImovel`.
+1. `state.ts`: `deriveState`, `validateOperation`, `proposeBlock`, `findProperty`.
 2. Testes: as 3 regras; histórico Maria → João → Ana.
 
 ### Fase D — Serialização e recuperação (RD06, RD07, T07, T09)
@@ -174,6 +177,10 @@ README.md                 # linha da tabela de pacotes deixa de dizer "placehold
 1. `index.ts` reexportando tudo; `pnpm --filter @sd/chain-core build` gera CJS + ESM + d.ts.
 2. Script raiz `test:core` e `test` encadeado; README atualizado.
 3. Rodar `pnpm test` no notebook do Flávio e colar a saída no PR de implementação.
+
+### Fase F — Ajustes de idioma no código da 001
+1. Passar para inglês as descrições de teste e os comentários listados na seção "Ajustes de idioma" da spec, sem mudar comportamento nem textos de UI.
+2. Rodar `pnpm test` de novo.
 
 ## Riscos e mitigações
 
