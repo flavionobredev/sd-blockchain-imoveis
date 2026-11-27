@@ -2,7 +2,7 @@
 
 Trabalho individual de Sistemas Distribuídos (IFCE Maracanaú): registro de propriedade de imóveis e histórico de transferências em uma blockchain simplificada, com cluster Docker de alta disponibilidade.
 
-Este repositório implementa a **spec 001** — esqueleto do monorepo e da infraestrutura local (sem lógica de negócio ainda).
+Specs implementadas: **001** (esqueleto do monorepo e infraestrutura local) e **002** (`chain-core`, a blockchain simplificada). Nós com replicação e telas chegam nas specs 003 e 004.
 
 ## Pré-requisitos
 
@@ -22,7 +22,7 @@ corepack prepare pnpm@10.33.4 --activate
 | API / nós | `apps/node` | NestJS (coordenador e réplicas) |
 | Web | `apps/web` | Nuxt 4 SSR, `@nuxt/ui`, Tailwind v4 |
 | Slides | `apps/slides` | Slidev |
-| Lib | `packages/chain-core` | Placeholder compartilhado (spec 002) |
+| Lib | `packages/chain-core` | Blockchain simplificada (spec 002): bloco SHA-256 com gênese fixa, `validateChain`, `deriveState`, regras de negócio, `proposeBlock`, serialização JSON e recuperação (`detectGap`, `appendBlock`, `canReplaceChain`) |
 
 ## Instalação
 
@@ -90,12 +90,13 @@ pnpm --filter @sd/slides dev    # Slidev em http://localhost:3030/
 ## Testes
 
 ```bash
-pnpm test          # agrega test:node + test:web
+pnpm test          # agrega test:core + test:node + test:web
+pnpm test:core     # testes unitários da chain-core
 pnpm test:node
 pnpm test:web
 ```
 
-Suítes completas e2e ficam para as specs 002–004; na 001 são smokes que passam com exit code 0.
+A `chain-core` tem testes unitários (spec 002); os e2e dos nós chegam na spec 003. Node e web ainda têm só smokes.
 
 ## Variáveis de ambiente
 

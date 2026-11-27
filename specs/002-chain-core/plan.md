@@ -96,6 +96,8 @@ export function canReplaceChain(remote: Chain): Result<void, ChainValidationResu
 
 Os nomes acima são o contrato com a 003; pequenos ajustes de assinatura na implementação devem ser refletidos neste plano.
 
+**Ajustes na implementação (PR `feat/002-chain-core`)**: o erro do `appendBlock` ganhou o nome `AppendBlockError` (mesmo formato `{ reason, message }`), e a API também exporta `MAX_PROPERTY_ID_LENGTH` (40) e `normalizePropertyId` (trim + maiúsculas), úteis para a 003 validar a entrada. Após o review do PR #4, também exporta `isIsoUtcTimestamp`: `validateChain` e `proposeBlock` só aceitam `timestamp` ISO 8601 em UTC com milissegundos e data real (FR-001-C); fora disso, `INVALID_DATA`. Assinaturas acima inalteradas.
+
 ### Detalhes de decisão
 
 1. **JSON canônico**: `canonicalJson` serializa objetos com chaves ordenadas (recursivo), arrays em ordem, sem espaços; `undefined` é omitido. É o que entra no SHA-256. Evita depender da ordem de chaves que o `JSON.parse` do disco devolve e não exige biblioteca externa.

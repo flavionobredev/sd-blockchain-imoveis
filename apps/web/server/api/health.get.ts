@@ -1,2 +1,2 @@
-// O header X-Served-By é aplicado pelo middleware server-name.
+// The X-Served-By header is set by the server-name middleware.
 export default defineEventHandler(() => ({ status: 'ok' }));
