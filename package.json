@@ -19,7 +19,8 @@
   "scripts": {
     "build": "pnpm -r build",
     "dev": "pnpm -r --parallel run dev",
-    "test": "pnpm run test:node && pnpm run test:web",
+    "test": "pnpm run test:core && pnpm run test:node && pnpm run test:web",
+    "test:core": "pnpm --filter @sd/chain-core test",
     "test:node": "pnpm --filter @sd/node test",
     "test:web": "pnpm --filter @sd/web test"
   }
