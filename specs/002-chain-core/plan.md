@@ -96,7 +96,7 @@ export function canReplaceChain(remote: Chain): Result<void, ChainValidationResu
 
 Os nomes acima são o contrato com a 003; pequenos ajustes de assinatura na implementação devem ser refletidos neste plano.
 
-**Ajustes na implementação (PR `feat/002-chain-core`)**: o erro do `appendBlock` ganhou o nome `AppendBlockError` (mesmo formato `{ reason, message }`), e a API também exporta `MAX_PROPERTY_ID_LENGTH` (40) e `normalizePropertyId` (trim + maiúsculas), úteis para a 003 validar a entrada. Assinaturas acima inalteradas.
+**Ajustes na implementação (PR `feat/002-chain-core`)**: o erro do `appendBlock` ganhou o nome `AppendBlockError` (mesmo formato `{ reason, message }`), e a API também exporta `MAX_PROPERTY_ID_LENGTH` (40) e `normalizePropertyId` (trim + maiúsculas), úteis para a 003 validar a entrada. Após o review do PR #4, também exporta `isIsoUtcTimestamp`: `validateChain` e `proposeBlock` só aceitam `timestamp` ISO 8601 em UTC com milissegundos e data real (FR-001-C); fora disso, `INVALID_DATA`. Assinaturas acima inalteradas.
 
 ### Detalhes de decisão
 

@@ -1,4 +1,5 @@
 import { createBlock } from './block';
+import { isIsoUtcTimestamp } from './validate';
 import type {
   Block,
   Chain,
@@ -148,6 +149,9 @@ export function proposeBlock(chain: Chain, op: NewOperation, timestamp?: string)
   const last = chain[chain.length - 1];
   if (!last) {
     return fail('INVALID_DATA', 'A cadeia está vazia: falta o bloco gênese');
+  }
+  if (timestamp !== undefined && !isIsoUtcTimestamp(timestamp)) {
+    return fail('INVALID_DATA', 'O timestamp deve estar no formato ISO 8601 em UTC (ex.: 2026-11-25T14:00:00.000Z)');
   }
 
   const derived = deriveState(chain);

@@ -10,6 +10,7 @@ import {
   createGenesisBlock,
   deriveState,
   detectGap,
+  isIsoUtcTimestamp,
   parseChain,
   proposeBlock,
   serializeChain,
@@ -162,6 +163,25 @@ describe('integrity (RF06, T08)', () => {
     const invalid = validateChain(unknownOperation);
     expect(invalid).toMatchObject({ invalidIndex: 3, reason: 'INVALID_DATA' });
     if (!invalid.valid) expect(invalid.message).toContain('Bloco 3');
+  });
+});
+
+describe('timestamp format (FR-001-C)', () => {
+  it('accepts only real ISO 8601 UTC timestamps with milliseconds', () => {
+    expect(isIsoUtcTimestamp(T1)).toBe(true);
+    for (const value of ['2026-11-27', '2026-11-27T12:00:00-03:00', '2026-11-27T12:00:00Z', '2026-02-30T12:00:00.000Z', '2026-11-27T25:00:00.000Z', 'not a date', 1764252000000]) {
+      expect(isIsoUtcTimestamp(value)).toBe(false);
+    }
+
+    const chain = buildSampleChain();
+    for (const timestamp of ['2026-11-27', '2026-11-27T12:00:00-03:00', '2026-02-30T12:00:00.000Z']) {
+      const tampered = [...chain];
+      tampered[2] = rehash({ ...chain[2], timestamp });
+      expect(validateChain(tampered)).toMatchObject({ valid: false, invalidIndex: 2, reason: 'INVALID_DATA' });
+
+      const result = proposeBlock(chain, { operation: 'REGISTRATION', propertyId: 'IMV002', address: 'Rua B, 200', owner: 'Pedro' }, timestamp);
+      expect(result).toMatchObject({ ok: false, error: { code: 'INVALID_DATA' } });
+    }
   });
 });
 

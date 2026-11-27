@@ -3,6 +3,18 @@ import { createGenesisBlock } from './block';
 import type { Block, Chain, ChainInvalidReason, ChainValidationResult } from './types';
 
 const HEX_64 = /^[0-9a-f]{64}$/;
+const ISO_UTC_MILLIS = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
+
+/**
+ * True only for ISO 8601 UTC timestamps with milliseconds (e.g. `2026-11-25T14:00:00.000Z`)
+ * that denote a real date: the round trip through `Date` must return the same string,
+ * which rejects dates without time, offsets other than `Z` and impossible dates (Feb 30).
+ */
+export function isIsoUtcTimestamp(value: unknown): value is string {
+  if (typeof value !== 'string' || !ISO_UTC_MILLIS.test(value)) return false;
+  const date = new Date(value);
+  return !Number.isNaN(date.getTime()) && date.toISOString() === value;
+}
 
 function isNonEmptyString(value: unknown): value is string {
   return typeof value === 'string' && value.trim() !== '';
@@ -17,7 +29,7 @@ export function hasValidBlockFormat(block: unknown): boolean {
   if (!isRecord(block)) return false;
   const { index, timestamp, data, previousHash, hash } = block;
   if (typeof index !== 'number' || !Number.isInteger(index) || index < 0) return false;
-  if (typeof timestamp !== 'string' || Number.isNaN(Date.parse(timestamp))) return false;
+  if (!isIsoUtcTimestamp(timestamp)) return false;
   if (typeof previousHash !== 'string' || !HEX_64.test(previousHash)) return false;
   if (typeof hash !== 'string' || !HEX_64.test(hash)) return false;
   if (!isRecord(data)) return false;

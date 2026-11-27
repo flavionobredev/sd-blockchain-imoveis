@@ -20,7 +20,7 @@ export type {
 } from './types';
 export { canonicalJson, calculateHash } from './hash';
 export { GENESIS_HASH, GENESIS_PREVIOUS_HASH, GENESIS_TIMESTAMP, createBlock, createGenesisBlock } from './block';
-export { validateChain } from './validate';
+export { isIsoUtcTimestamp, validateChain } from './validate';
 export {
   MAX_PROPERTY_ID_LENGTH,
   deriveState,
